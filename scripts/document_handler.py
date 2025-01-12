@@ -13,14 +13,15 @@ class DocumentHandler:
         self.document_type = self.get_document_type(self.path)
         self.content = content
         self.content_tokens = self.content.split(" ")
+        self.author = "unknown"
         self.title = title
-        self.file_name = self.path.split("/")[-1].split(".")[0]
+        self.file_name = f"{self.author}-{self.title}" if self.author != "unknown" else self.title
         self.short_summary = ""
         self.summary = ""
         self.sentiment = 0.0
         self.sentiment_reason = str
         self.entities = []
-        self.marked_sentences = defaultdict(list)     # Initialize dictionary to store sentences by marking color
+        self.marked_sentences = defaultdict(list) # Initialize dictionary to store sentences by marking color
         self.wordcloud_data = dict() # Dict to store the information for the wordclouds
         self.answers = dict() # Dict where the answer dict (quesiton/reasoning/answer) of every question is stored
         self.topic_clusters = dict() # Dict where the cluster name and the list of topics is stored
@@ -62,6 +63,7 @@ class DocumentHandler:
             "path": self.path,
             "content": self.content,
             "content_tokens": self.content_tokens,
+            "author": self.author,
             "title": self.title,
             "short_summary": self.short_summary,
             "summary": self.summary,
@@ -81,6 +83,7 @@ class DocumentHandler:
         doc = cls(data.get("path"), data.get("content"), data.get("title"))
         doc.document_type = doc.get_document_type(doc.path)
         doc.content_tokens = data.get("content_tokens")
+        doc.author = data.get("author")
         doc.short_summary = data.get("short_summary")
         doc.summary = data.get("summary")
         doc.sentiment = data.get("sentiment")

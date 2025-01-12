@@ -33,7 +33,7 @@ class OllamaMediaAnalysis(OllamaHandler):
         super().__init__(model_name, system_prompt, debug)
         
         
-    def generate_short_summary(self, text: str, boost:str= "") -> str:
+    def generate_short_summary(self, text: str, boost: str= "") -> str:
         """ Returns a short summary in one word
 
         Args:
@@ -60,8 +60,10 @@ class OllamaMediaAnalysis(OllamaHandler):
                 # Regex for a single sentence (ending with a punctuation mark)
                 if not re.match(r"^[A-Z].*[.!?]$", value.strip()):
                     raise ValueError(f"{ERROR_MSG_SENTENCE}.")
+                
                 if value.count('.') + value.count('!') + value.count('?') > 1:
                     raise ValueError(f"{ERROR_MSG_SENTENCE}.")
+                
                 return value
     
         prompt = f"Please summarize the article very concisely. First, reason about it. Finally, respond with exactly one sentence that starts with 'The article is about...'. Here is the article: <{text}>"
@@ -80,7 +82,7 @@ class OllamaMediaAnalysis(OllamaHandler):
             if boost == "":
                 return self.generate_short_summary(
                     text=response["response"].split("short_summary")[1],
-                    boost=f"{ERROR_MSG_SENTENCE}, but your answer contains more than one sentence - fix this! ",
+                    boost=f"{ERROR_MSG_SENTENCE}, but your answer contains more than one sentence - Fix it to inlcude only one sentence! ",
                 )
             else:
                 value = response["response"].split("short_summary")[1]

@@ -139,6 +139,23 @@ class FileAnalyzer:
         
         return doc
     
+    def extract_title(self, path):
+        # Get the filename (basename) and remove the file property
+        title = os.path.splitext(os.path.basename(path))[0]
+        
+        # Clean from special characters
+        title_strings = title.split("_")
+        
+        if isinstance(title_strings, list):
+            title = ""              
+            for sub_string in title_strings:
+                if len(sub_string) > len(title):
+                    title = sub_string
+            
+        title = self.clean_input(title)
+                
+        return title
+    
     def process_docx(self, docx_path: str) -> DocumentHandler:
         """ Extracts the content from the docx_path and process all questions
 
@@ -147,15 +164,41 @@ class FileAnalyzer:
         """
         
         content = self.extract_text_from_docx(docx_path)
-        
         content = self.clean_input(content, line_breaks=False)
+        
+        # Remove the top boxes with author link etc.
+        try:
+            new_content = content.split("Main image")
+            if len(new_content[1]) > len(new_content[0]):
+                # Set new content to part after main image
+                content = new_content[1]
+        except Exception as e:
+            print(f"ERROR: Could not remove article properties")
+            new_content = content
+        
+        # Extract author and remove it
+        try: 
+            # Set author
+            author = new_content[0].split("Author ")[1].strip()
+            
+            # Replace the surname of the author in the text with a placeholder
+            content = content.replace(author.split(" ")[-1], "{author}")
+            
+            # Iterate over all other names of the author and remove them
+            for name in author.split(" "):
+                content = content.replace(name, "")
 
-        title = os.path.splitext(os.path.basename(docx_path))[0]
-        title = title.split("_")[0].strip()
+        except Exception as e:
+            print(f"ERROR: Could not extract author from file!\n{e}")
+            author = "unknown"
+        
+        # Get the filename (basename) and remove the file property
+        title = self.extract_title(docx_path)
         
         # Initialize DocxDocument object
         print(f"{datetime.now().strftime("%H:%M:%S")}\t Create Docx document <{title[:20]}...> with content of length {len(content)}")
         docx_doc = DocumentHandler(docx_path, content, title)
+        docx_doc.author = author
         
         docx_doc = self.process(docx_doc)
         
@@ -170,8 +213,7 @@ class FileAnalyzer:
         content = self.extract_text_from_pdf(pdf_path)
         content = self.clean_input(content, line_breaks=False)
 
-        title = os.path.splitext(os.path.basename(pdf_path))[0]
-        title = title.split("_")[0].strip()
+        title = self.extract_title(pdf_path)
         
         # Initialize PdfDocument object
         print(f"{datetime.now().strftime("%H:%M:%S")}\t Create PDF document <{title[:20]}...> with content of length {len(content)}")
@@ -220,6 +262,7 @@ class FileAnalyzer:
                 
                 if file_name.endswith("pdf"):
                     doc = self.process_pdf(doc_path)
+                    
                 elif file_name.endswith("docx"):
                     doc = self.process_docx(doc_path)
                     
@@ -241,6 +284,37 @@ class FileAnalyzer:
         Returns:
             str: Cleaned input files.
         """
+        def remove_large_digits(input_string):
+            """ Removes any digit that appears 3 or more times consecutively. """
+            pattern = r'\d{3,}'  
+            return re.sub(pattern, '', input_string)
+
+        def remove_entries(words_to_remove: list, text: str):
+            """ Removes entries from a text based on a list provided. """
+            
+            '''# Regex pattern to match whole words in the list
+            pattern = r'\b(?:' + '|'.join(re.escape(word.lower()) for word in words_to_remove) + r')\b'
+            
+            # Replace matched words with an empty string
+            cleaned_text = re.sub(pattern, '', text, flags=re.IGNORECASE)
+
+            # Return cleaned text with excess spaces normalized
+            return ' '.join(cleaned_text.split())'''
+            def replacer(match):
+                word = match.group(0)
+                if word.lower() in words_to_remove:
+                    return ''  # Remove the matched word
+                return word  # Retain other words as-is
+
+            # Use re.sub with the replacer function to remove words regardless of case sensitivity
+            pattern = r'\b(?:' + '|'.join(re.escape(word) for word in words_to_remove) + r')\b'
+            cleaned_text = re.sub(pattern, replacer, text, flags=re.IGNORECASE)
+
+            # Normalize spaces and return cleaned text
+            return ' '.join(cleaned_text.split())
+            
+        
+        words_to_remove = ["datum", "link", "dokument"]
         
         if isinstance(input, str):
             # Apply the cleaning steps for strings
@@ -249,6 +323,9 @@ class FileAnalyzer:
             input = input.replace("’", "'")
             
             input = input.replace("\n\n", "\n")
+            
+            # Remove words
+            input = remove_entries(words_to_remove, input)
             
             # Remove line breaks if line_breaks is True and not soft_clean
             if line_breaks and not soft_clean:
@@ -260,6 +337,7 @@ class FileAnalyzer:
             
             # Remove all special characters except "-" if not soft_clean
             if not soft_clean:
+                input = remove_large_digits(input)
                 input = re.sub(r"[^a-zA-Z0-9.,*' -]", " ", input)
             
             # Remove all double spaces

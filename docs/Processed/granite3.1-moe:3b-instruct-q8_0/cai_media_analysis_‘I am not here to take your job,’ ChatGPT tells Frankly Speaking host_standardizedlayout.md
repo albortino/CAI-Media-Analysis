@@ -15,15 +15,19 @@ In summary, ChatGPT highlights its role as a tool for facilitating communication
 # Questions
 ## Question 1:
 *How do the media in this article frame the public discussion about ChatGPT? Are there certain **metaphors** that keep cropping up?*
+
 The media frames the public discussion about ChatGPT through metaphors such as 'AI language model', 'a tool that can be used for a wide range of applications', and 'cautious optimism'. These phrases highlight the technological advancement aspect, emphasize its versatility, and express cautiousness regarding potential risks.
 ## Question 2:
 *Which role does or might the Arabic World play in the development of Artificial Intelligence? Answer with 'Not mentioned' if not applicable.*
+
 Not mentioned
 ## Question 3:
 *Which use cases of Artificial Intelligence are helpful for the Arabic world based on this article?*
+
 1. Language Translation As an AI language model, ChatGPT can facilitate communication and translate between languages, aiding in intercultural understanding and global collaboration. This can significantly benefit countries where English is not widely spoken.
 ## Question 4:
 *What is the final message of the article that the author wants to convey? Keep your answer short and precise!*
+
 AI has potential for significant positive impact but requires responsible use to address concerns about privacy, bias, and job displacement.
 
 # Sentiment

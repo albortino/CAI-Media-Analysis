@@ -14,15 +14,19 @@ The article focuses on ChatGPT, large language models capable of mimicking human
 # Questions
 ## Question 1:
 *How do the media in this article frame the public discussion about ChatGPT? Are there certain **metaphors** that keep cropping up?*
+
 The media frames the public discussion about ChatGPT using metaphors that describe AI as a 'digital scribe,' emphasizing its capacity to assist humans rather than replace them. This is often framed by describing large-language models like ChatGPT as 'machines for matching patterns,' highlighting their automated and rule-based nature. Additionally, the media portrays AI solutions as tools that enhance human capabilities, acknowledging human limitations in relation to AI abilities. Key metaphors include comparing AI to a digital scribe that aids humans in tasks such as content creation, expressing it as an enhancement rather than a replacement for human intelligence, and emphasizing the unique strengths of human creativity, emotion, and perspective.
 ## Question 2:
 *Which role does or might the Arabic World play in the development of Artificial Intelligence? Answer with 'Not mentioned' if not applicable.*
+
 Not mentioned
 ## Question 3:
 *Which use cases of Artificial Intelligence are helpful for the Arabic world based on this article?*
+
 Content creation and assistance, Educational institutional challenges due to cheating prevention, Reinforcement learning, generative adversarial networks, symbolic AI
 ## Question 4:
 *What is the final message of the article that the author wants to convey? Keep your answer short and precise!*
+
 AI has significant potential but must be used responsibly, considering both opportunities and challenges.
 
 # Sentiment

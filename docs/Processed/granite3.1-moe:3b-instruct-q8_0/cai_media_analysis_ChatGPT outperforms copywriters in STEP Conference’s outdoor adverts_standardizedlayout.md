@@ -15,15 +15,19 @@ ChatGPT, an OpenAI tool, is employed by Dubai's tech festival STEP Conference fo
 # Questions
 ## Question 1:
 *How do the media in this article frame the public discussion about ChatGPT? Are there certain **metaphors** that keep cropping up?*
+
 The media in this article frames the public discussion about ChatGPT through several strategic metaphors and analogies. It describes ChatGPT as an artificial intelligence AI assistant, an AI-driven tool that enhances efficiency and productivity for STEP Conference's team in creating content introduces AI into an industry traditionally dominated by humans to illustrate the emerging era of AI-driven industries and uses a dichotomy to discuss ChatGPT's role - it will both complement and potentially replace human creativity. These metaphors collectively contribute to a nuanced public discussion about ChatGPT, highlighting both its transformative potential and the evolving nature of work in the era of advanced technology.
 ## Question 2:
 *Which role does or might the Arabic World play in the development of Artificial Intelligence? Answer with 'Not mentioned' if not applicable.*
+
 Not mentioned
 ## Question 3:
 *Which use cases of Artificial Intelligence are helpful for the Arabic world based on this article?*
+
 ChatGPT is used by STEP Conference for creating outdoor advertisements, while other AI tools are employed for writing session briefs, social posts, and general content generation. These applications of AI demonstrate its potential in advertising, marketing, and content creation sectors within the Arabic world.
 ## Question 4:
 *What is the final message of the article that the author wants to convey? Keep your answer short and precise!*
+
 The final message is that AI tools like ChatGPT can enhance productivity and complement human creativity in the workplace, suggesting a collaborative relationship between machines and human talent.
 
 # Sentiment

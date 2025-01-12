@@ -115,7 +115,7 @@ class DocumentHandler:
             questions = ""
             for id, (question, answer) in enumerate(self.answers.items()):
                 questions += f"## Question {id+1}:\n"
-                questions += f"*{question}*\n"
+                questions += f"*{question}*\n\n"
                 questions += f"{answer}\n"
                 
         except AttributeError:

@@ -16,15 +16,19 @@ The article centers around ChatGPT's role in revolutionizing journalism, educati
 # Questions
 ## Question 1:
 *How do the media in this article frame the public discussion about ChatGPT? Are there certain **metaphors** that keep cropping up?*
+
 The media frames the public discussion about ChatGPT with a combination of fascination 'breathtaking capacity', 'a great opportunity for advancement' and caution using metaphors like 'existential threat' to express concerns regarding job displacement .
 ## Question 2:
 *Which role does or might the Arabic World play in the development of Artificial Intelligence? Answer with 'Not mentioned' if not applicable.*
+
 Not applicable
 ## Question 3:
 *Which use cases of Artificial Intelligence are helpful for the Arabic world based on this article?*
+
 The article highlights AI's potential use cases in journalism, particularly through ChatGPT. This tool enables quick generation of detailed content, including essays, articles, research papers, reports, poetry, and explanations on complex scientific topics, potentially transforming news production in the Arabic world.
 ## Question 4:
 *What is the final message of the article that the author wants to convey? Keep your answer short and precise!*
+
 The author conveys that AI, specifically ChatGPT, offers both potential benefits and challenges. While it could replace jobs in certain fields like journalism and healthcare without proper safeguards, it also has the capacity to level the playing field in scientific research for developing nations if regulated effectively.
 
 # Sentiment

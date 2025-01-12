@@ -322,7 +322,6 @@ class FileAnalyzer:
             else DocumentHandler.from_dict(doc_dict) 
             for doc_dict in data
         ]
-        
     
     def export_docx_files(self):
         """ Exports all documents as docx files in output folder of the instance. """

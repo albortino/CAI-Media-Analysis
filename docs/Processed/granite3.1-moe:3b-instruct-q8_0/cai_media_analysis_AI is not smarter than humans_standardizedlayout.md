@@ -15,15 +15,19 @@ The article delves into ChatGPT, its widespread AI applications, examines past m
 # Questions
 ## Question 1:
 *How do the media in this article frame the public discussion about ChatGPT? Are there certain **metaphors** that keep cropping up?*
+
 AI can become a powerful force, yet it is still in its infancy The tale of Tay serves as an example Within just 16 hours of being released on Twitter by Microsoft, the chatbot had been corrupted into spewing racist messages due to all the negative input it received from users. With the increasing influence of AI in our lives, there are many questions about how it will shape our future, from its utilization to aspects like reliability and connection with humans.
 ## Question 2:
 *Which role does or might the Arabic World play in the development of Artificial Intelligence? Answer with 'Not mentioned' if not applicable.*
+
 Not mentioned
 ## Question 3:
 *Which use cases of Artificial Intelligence are helpful for the Arabic world based on this article?*
+
 1. Personal tasks and business operations Virtual assistants like ChatGPT that help with daily tasks and marketing campaigns. 2. Language translation capabilities AI tools aiding communication across languages like English and Arabic. 3. Global connection Enhancing international collaboration and understanding.
 ## Question 4:
 *What is the final message of the article that the author wants to convey? Keep your answer short and precise!*
+
 The author advocates for responsible use of AI, highlighting its potential benefits through personal anecdotes but acknowledging concerns about reliability. He asserts that while AI can augment human skills, it cannot replace essential human connections and emphasizes the importance of maintaining a balanced perspective.
 
 # Sentiment

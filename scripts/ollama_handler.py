@@ -1,17 +1,23 @@
 from datetime import datetime
+from turtle import st
 import ollama
 import json, re
 from pydantic import BaseModel, validator, ValidationError
 
 
 class OllamaHandler:
+    """" Handles ollama with some extra functionalities. """
+    
     def __init__(self, model_name: str, system_prompt: str = "", debug: bool = False):
+        """ Initialize the OllamaHandler with model name, system prompt, and debug flag. """
+    
         self.debug = debug
         self.model = model_name
         self.ollama = ollama
         self.system_prompt = system_prompt if system_prompt != "" else "You are a trustworthy large language model"
 
     def get_response(self, prompt: str, system: str = "") -> str:
+        """ Get the response text of the ollama.response. """
         if system == "":
             system = self.system_prompt
 
@@ -22,15 +28,31 @@ class OllamaHandler:
     
 class OllamaMediaAnalysis(OllamaHandler):
     def __init__(self, model_name: str, system_prompt: str = "", debug: bool = False):
+        """ Initialize the OllamaHandler with model name, system prompt, and debug flag. """
+
         super().__init__(model_name, system_prompt, debug)
         
         
     def generate_short_summary(self, text: str, boost:str= "") -> str:
+        """ Returns a short summary in one word
+
+        Args:
+            text (str): Input text
+            boost (str, optional): Boost string to inject error messages. Defaults to "".
+
+        Raises:
+            ValueError: If the summary is not only one sentence
+
+        Returns:
+            str: Short Summary
+        """
+        
         print(f"{datetime.now().strftime('%H:%M:%S')}\t Generating short summary") if self.debug else None
 
         ERROR_MSG_SENTENCE = "The summary must be exactly one sentence"
         
         class ShortSummary(BaseModel):
+            """ Pydantic object that verifies the short summary format (one sentence). """
             short_summary: str
 
             @validator("short_summary")
@@ -67,37 +89,59 @@ class OllamaMediaAnalysis(OllamaHandler):
     
 
     def generate_summary(self, text: str, boost:str = "") -> str:
+        """ Generates the summary of the input text with bullet points.
+
+        Args:
+            text (str): Input text
+            boost (str, optional): Boost string to inject error messages. Defaults to "".
+
+        Raises:
+            ValueError: Is raised if summary does not contain bullet points
+
+        Returns:
+            str: Summary (with bullet points)
+        """
+        
         print(f"{datetime.now().strftime('%H:%M:%S')}\t Generating summary") if self.debug else None
         
-        ERROR_MSG_BULLETS = "The summary must contain at least one numbered bullet point (e.g., '1. answer\n2. answer\n3. answer')"
+        ERROR_MSG_BULLETS = ("The summary must contain at least one numbered bullet point "
+                             "(e.g., '1. **headline1**: answer1\\n2 **headline2**:. answer2\\n3. **headline3**: answer3')")
         
-        def format_bullet_points(text: str) -> str:
-            """Ensure each numbered bullet point (e.g., '1.', '2.') starts with a newline character."""
-            # Add a newline before bullet points if missing
-            formatted_text = re.sub(r"(?<!\n)(\d\.)", r"\n\1", text)
-            formatted_text = formatted_text.replace("\n\n", "\n").strip()
+        def ensure_numbered_list(text: str) -> str:
+            """
+            Ensures that the text is formatted as a numbered bullet point list.
+            If no list format is detected, converts each line into a numbered item.
+            """
             
-            return formatted_text
+            if not re.search(r"\d\.", text):
+                lines = [line.strip() for line in text.split("\n") if line.strip()]
+                numbered_lines = [f"{i+1}. {line}" for i, line in enumerate(lines)]
+                return "\n".join(numbered_lines)
+            return text.strip()
+    
     
         class Summary(BaseModel):
+            """ Pydantic object that verifies the summary format (bullet points). """
             summary: str
 
             @validator("summary")
             def must_include_numbered_bullet_points(cls, value):
-                # Ensure the summary contains at least one numbered bullet point
-                if not re.search(r"\d\.", value):
-                    raise ValueError(f"{ERROR_MSG_BULLETS}.")
+                # Ensure the summary contains at least 2 numbered bullet point
+                bullet_points = re.findall(r"^\d\.", value, re.MULTILINE)
+                
+                if len(bullet_points) < 3:
+                    raise ValueError("The summary must contain at least three numbered bullet points.")
                 return value
     
         prompt = f"Your task is to briefly summarize the article. Focus on opportunities and risks, whether AI will replace or complement jobs and whether AI is experiences as machine- or human-like. Provide at maximum 7 numberd bullet points. Ensure each numbered bullet point (e.g., '1.', '2.') starts with a newline character. Here is the article: <{text}>"
         response = self.ollama.generate(
-            model=self.model, system=self.system_prompt, prompt=boost+prompt)
+            model=self.model, system=self.system_prompt, prompt=boost + prompt)
 
         # Validate and format the response
         try:
             validated_response = Summary(summary=response["response"])
             # Format bullet points to ensure they start with \n
-            formatted_summary = format_bullet_points(validated_response.summary)
+            formatted_summary = ensure_numbered_list(validated_response.summary)
             return formatted_summary
         except ValidationError as e:
             print(f"Validation Error: {e}")
@@ -105,14 +149,23 @@ class OllamaMediaAnalysis(OllamaHandler):
             if boost == "":
                 return self.generate_summary(
                     text=text,
-                    boost=f"{ERROR_MSG_BULLETS}. Fix it for the next time! ",
+                    boost=f"{ERROR_MSG_BULLETS}. Fix it to inlcude a valid list! ",
                 )
             else:
-                formatted_summary = format_bullet_points(response["response"])
-                summary_only = formatted_summary.split("summary")[1]
-                return formatted_summary if summary_only is None else summary_only.strip()
+                fallback_summary = ensure_numbered_list(response["response"])
+                return fallback_summary
             
     def answer_question(self, text: str, question: str, multiple_articles: bool = False) -> dict:
+        """ Answers a specific questions so that no further information has to be provided
+
+        Args:
+            text (str): Input text
+            question (str): Question to answer. In case of multiple_articles==True the questions should be in JSON format.
+            multiple_articles (bool, optional): Flag if the questions should be answered for one article only or several articles. Defaults to False.
+
+        Returns:
+            dict: Question, Reasoning, Answer
+        """
         print(f"{datetime.now().strftime('%H:%M:%S')}\t Answering question <{question[:30]}...>") if self.debug else None
 
         class Answer(BaseModel):
@@ -132,6 +185,14 @@ class OllamaMediaAnalysis(OllamaHandler):
         return json.loads(response["response"])
 
     def analyze_sentiment(self, text: str) -> dict:
+        """ Analyzes the sentiment from -5 (negative), 0 (neutral), +5 (positive)
+
+        Args:
+            text (str): Input text
+
+        Returns:
+            dict: sentiment reason, sentiment value
+        """
         print(f"{datetime.now().strftime('%H:%M:%S')}\t Analyzing sentiment") if self.debug else None
 
         class Sentiment(BaseModel):
@@ -144,12 +205,21 @@ class OllamaMediaAnalysis(OllamaHandler):
 
         response = json.loads(response["response"])
         
+        """
         if response.get("sentiment_value") > 5 and response.get("sentiment_value")/10 > -5:
-            response["sentiment_value"] = response.get("sentiment_value")/10
+            response["sentiment_value"] = response.get("sentiment_value")/10"""
             
         return response
 
-    def extract_topics(self, text: str) -> list:
+    def extract_topics(self, text: str) -> list[str]:
+        """ Extracts a list of topics that are mentioned in the article.
+
+        Args:
+            text (str): Input text
+
+        Returns:
+            list[str]: List of topics (single words or short sentences)
+        """
 
         class Topics(BaseModel):
             topics: list[str]
@@ -163,7 +233,15 @@ class OllamaMediaAnalysis(OllamaHandler):
 
         return cleaned_topic_list
 
-    def create_topic_clusters(self, topics: list) -> dict:
+    def create_topic_clusters(self, topics: list[str]) -> dict[str, list[str]]:
+        """ Summarizes the provided topics into clusters.
+        
+        Args:
+            topics (list[str]): A list of topics in form of words or short sentences
+
+        Returns:
+            dict[str, list[str]]: Cluster Name: topics
+        """
 
         class TopicClusters(BaseModel):
             cluster: dict[str, list[str]]

@@ -10,32 +10,39 @@ from docx.shared import Inches
 class DocumentHandler:
     def __init__(self, path:str, content: str, title: str):
         self.path = path
+        self.document_type = self.get_document_type(self.path)
         self.content = content
         self.content_tokens = self.content.split(" ")
         self.title = title
-        self.filename = self.path.split("/")[-1].split(".")[0]
-        #print("Handler initialized")
-
-    def __str__(self) -> str:
-        return f"Title: {self.title}\n"
-        
-class PdfDocument(DocumentHandler):
-    def __init__(self, path: str, content: str, title: str):
-        super().__init__(path, content, title)
+        self.file_name = self.path.split("/")[-1].split(".")[0]
         self.short_summary = ""
         self.summary = ""
         self.sentiment = 0.0
+        self.sentiment_reason = str
         self.entities = []
-        self.highlighted_sentences = defaultdict(list)     # Initialize dictionary to store sentences by highlight color
+        self.marked_sentences = defaultdict(list)     # Initialize dictionary to store sentences by marking color
         self.wordcloud_data = dict() # Dict to store the information for the wordclouds
         self.answers = dict() # Dict where the answer dict (quesiton/reasoning/answer) of every question is stored
         self.topic_clusters = dict() # Dict where the cluster name and the list of topics is stored
-        
-        print(f'{datetime.now().strftime("%H:%M:%S")} Initialized PdfDocument: <{self.title}>')
-        
+
+        print(f'{datetime.now().strftime("%H:%M:%S")} Initialized Document: <{self.title}>')
+
+
+    def get_document_type(self, path: str):
+        return path.split(".")[-1]
+    
     def __str__(self) -> str:
-        return_string = super().__str__()
+        """ Returns a short summary if called. """
+
+        return_string = f"Title: {self.title}\n"
         return_string += f"Short Summary: {self.short_summary}\n"
+            
+        return return_string
+            
+            
+    def get_info(self):
+        """ Extends __str__ method with further information. """
+        return_string = str(self)
         return_string += f"Summary:\n{self.summary}\n"
         return_string += f"Sentiment: {self.sentiment}\n"
         return_string += f"Entities: {self.entities}\n"
@@ -44,13 +51,13 @@ class PdfDocument(DocumentHandler):
             
         for question, answer in self.answers.items():
             return_string += f"Question: {question}\n\t{answer}\n"
-            
+        
         return return_string
-    
-    def print_info(self):
-        print(self)
-              
+           
+        
     def to_dict(self) -> Dict:
+        """ Returns the instance as dict (e.g., for saving). """
+
         return {
             "path": self.path,
             "content": self.content,
@@ -59,8 +66,9 @@ class PdfDocument(DocumentHandler):
             "short_summary": self.short_summary,
             "summary": self.summary,
             "sentiment": self.sentiment,
+            "sentiment_reason": self.sentiment_reason,
             "entities": self.entities,
-            "highlighted_sentences": self.highlighted_sentences,
+            "marked_sentences": self.marked_sentences,
             "answers": self.answers,
             "topic_clusters": self.topic_clusters,
             "wordcloud_data": self.wordcloud_data
@@ -68,95 +76,24 @@ class PdfDocument(DocumentHandler):
     
     @classmethod
     def from_dict(cls, data: Dict):
+        """ Loads an instance of this class based on to_dict() method. """
+
         doc = cls(data.get("path"), data.get("content"), data.get("title"))
+        doc.document_type = doc.get_document_type(doc.path)
         doc.content_tokens = data.get("content_tokens")
         doc.short_summary = data.get("short_summary")
         doc.summary = data.get("summary")
         doc.sentiment = data.get("sentiment")
+        doc.sentiment_reason = data.get("sentiment_reason")
         doc.entities = data.get("entities")
-        doc.highlighted_sentences = data.get("highlighted_sentences")
+        doc.marked_sentences = data.get("marked_sentences")
         doc.answers = data.get("answers")
         doc.topic_clusters = data.get("topic_clusters")
         doc.wordcloud_data = data.get("wordcloud_data")
         return doc
-    
-    def extract_highlighted_sentences(self) -> dict:
-        
-        highlighted_sentences = defaultdict(list)   
-
-        # Open PDF document
-        doc = pymupdf.open(self.path)
-        
-        for page_num in range(len(doc)):
-            page = doc[page_num]
             
-            # Get plain text content of the page
-            text = page.get_text()
-            
-            # Split text into sentences (basic splitting by period)
-            sentences = [s.strip() + '.' for s in text.split('.') if s.strip()]
-            
-            # Get highlights on the page
-            highlights = page.get_text_words()
-            annots = page.annots()
-            
-            if annots:
-                for annot in annots:
-                    if annot.type[0] == 8:  # Highlight annotation
-                        # Get highlight coordinates
-                        coords = annot.rect
-                        
-                        # Get color of highlight (normalize to RGB)
-                        color = annot.colors['stroke']
-                        if color:
-                            color_rgb = tuple(int(c * 255) for c in color)
-                        else:
-                            continue
-                        
-                        # Find words within highlight coordinates
-                        highlighted_words = []
-                        for word_info in highlights:
-                            word_rect = pymupdf.Rect(word_info[:4])
-                            if coords.intersects(word_rect):
-                                highlighted_words.append(word_info[4])
-                        
-                        if highlighted_words:
-                            # Find the sentence containing the highlighted words
-                            for sentence in sentences:
-                                if any(word.lower() in sentence.lower() for word in highlighted_words):
-                                    # Convert RGB tuple to hex for consistent key format
-                                    color_hex = '#{:02x}{:02x}{:02x}'.format(*color_rgb)
-                                    if sentence not in highlighted_sentences[color_hex]:
-                                        highlighted_sentences[color_hex].append(sentence)
-        
-        # Convert defaultdict to regular dict before returning it to the class
-        self.highlighted_sentences = dict(highlighted_sentences)
-
-    def get_pretty_highlights(self):
-        text = ""
-        
-        for color, sentences in self.highlighted_sentences.items():
-            print(f"\nHighlight Color: {color}")
-            print("-" * 50)
-            
-            text += "".join([f"{i}. {sentence}\n" for i, sentence in enumerate(sentences, 1)])
-            
-        return text 
-        
-    def pretty_print_highlights(self):
-        print(self.get_pretty_highlights())                
-                
-    def get_number_of_highlights(self) -> dict:
-        """Function to get the number of highlights in the document"""
-        colors_count = dict()
-
-        for color, sentences in self.highlighted_sentences.items():
-            colors_count[color] = len(sentences)
-            
-        return colors_count
-
     def get_markdown(self) -> str:
-        """Formats document data into a markdown string."""
+        """Formats document data into a markdown string. """
 
         # Handle potential errors gracefully
         try:
@@ -200,12 +137,6 @@ class PdfDocument(DocumentHandler):
             topics_str = "".join([f"## {cluster}\n\t{', '.join(topics)}\n" for cluster, topics in topics.items()])
         except AttributeError:
             topics_str = "No Topic Clusters"
-            
-        '''    try:
-            highlights = doc.get_number_of_highlights()
-        except AttributeError:
-            highlights = "No Highligts"
-        '''
 
         # Construct the markdown string
         markdown_output = f"# Media Analysis - {title}\n\n"
@@ -215,7 +146,7 @@ class PdfDocument(DocumentHandler):
         markdown_output += f"# Sentiment\n{sentiment}\n\n"
         markdown_output += f"# Entities\n{entities_str}\n\n"
         markdown_output += f"# Topic Clusters\n{topics_str}\n"
-        #markdown_output += f"# Highlights\n{highlights}\n\n"
+        #markdown_output += f"# Markings\n{markings}\n\n"
 
         # No word cloud part because it's difficult to show it in markdown
         
@@ -243,7 +174,8 @@ class PdfDocument(DocumentHandler):
 
         # Sentiment
         docx.add_heading("Sentiment", level=2)
-        docx.add_paragraph(f"The sentiment is {self.sentiment}")
+        docx.add_paragraph(f"The sentiment is <{self.sentiment}>")
+        docx.add_paragraph(f"{self.sentiment_reason}")
 
         # Entities
         docx.add_heading("Entities", level=2)
@@ -264,17 +196,13 @@ class PdfDocument(DocumentHandler):
             try:
                 (_, word_frequencies), (_, wordcloud_path) = values.items()
                 
-                if key == "highlights" and values:    
-                    num_highlights = self.get_number_of_highlights()
-                    if num_highlights is not None:
-                        docx.add_heading("Highlights", level=2)
-                        for color, count in num_highlights.items():
+                if key == "markings" and values:    
+                    num_markings = self.get_number_of_markings()
+                    if num_markings is not None:
+                        docx.add_heading("Markings", level=2)
+                        for color, count in num_markings.items():
                             docx.add_paragraph(f"{color}: {count}")
                     
-                
-                #if isinstance(word, list):
-                    
-                    #wordcloud_path = os.path.join(file_path, "wordclouds", f"{self.title}_wordcloud_{key}.png")
                 
                 # Check if the word cloud image exists
                 if os.path.exists(wordcloud_path):  
@@ -284,13 +212,97 @@ class PdfDocument(DocumentHandler):
                     if word_frequencies:    
                         docx.add_paragraph("Top 10 words:") 
                         # Add top words and their frequencies
-                        for word, freq in word_frequencies:
-                            docx.add_paragraph(f"- {word}: {freq}")
+                        word_freqs = [f"- {word}: {freq}" for word, freq in word_frequencies]
+                        docx.add_paragraph("\n".join(word_freqs))
+                        
             except ValueError:
                 pass
                         
         # Save the document
         docx.save(file_path)
+
+        
+class PdfDocument(DocumentHandler):
+    """ Implements function to extract marked text based on text color. """
+    def __init__(self, path: str, content: str, title: str):
+        super().__init__(path, content, title)
+        
+        print(f'{datetime.now().strftime("%H:%M:%S")} Initialized PdfDocument: <{self.title}>')
+    
+    
+    def extract_marked_sentences(self) -> dict:
+        
+        marked_sentences = defaultdict(list)   
+
+        # Open PDF document
+        doc = pymupdf.open(self.path)
+        
+        for page_num in range(len(doc)):
+            page = doc[page_num]
+            
+            # Get plain text content of the page
+            text = page.get_text()
+            
+            # Split text into sentences (basic splitting by period)
+            sentences = [s.strip() + '.' for s in text.split('.') if s.strip()]
+            
+            # Get markings on the page
+            markings = page.get_text_words()
+            annots = page.annots()
+            
+            if annots:
+                for annot in annots:
+                    if annot.type[0] == 8:  # Marking annotation
+                        # Get marking coordinates
+                        coords = annot.rect
+                        
+                        # Get color of marking (normalize to RGB)
+                        color = annot.colors['stroke']
+                        if color:
+                            color_rgb = tuple(int(c * 255) for c in color)
+                        else:
+                            continue
+                        
+                        # Find words within marking coordinates
+                        marked_words = []
+                        for word_info in markings:
+                            word_rect = pymupdf.Rect(word_info[:4])
+                            if coords.intersects(word_rect):
+                                marked_words.append(word_info[4])
+                        
+                        if marked_words:
+                            # Find the sentence containing the marked words
+                            for sentence in sentences:
+                                if any(word.lower() in sentence.lower() for word in marked_words):
+                                    # Convert RGB tuple to hex for consistent key format
+                                    color_hex = '#{:02x}{:02x}{:02x}'.format(*color_rgb)
+                                    if sentence not in marked_sentences[color_hex]:
+                                        marked_sentences[color_hex].append(sentence)
+        
+        # Convert defaultdict to regular dict before returning it to the class
+        self.marked_sentences = dict(marked_sentences)
+
+    def get_pretty_markings(self):
+        """ Returns a prettified markings for every color and sentence. """
+        text = ""
+        
+        for color, sentences in self.marked_sentences.items():
+            print(f"\nMarking Color: {color}")
+            print("-" * 50)
+            
+            text += "".join([f"{i}. {sentence}\n" for i, sentence in enumerate(sentences, 1)])
+            
+        return text 
+        
+                
+    def get_number_of_markings(self) -> dict:
+        """ Function to get the number of markings in the document. """
+        colors_count = dict()
+
+        for color, sentences in self.marked_sentences.items():
+            colors_count[color] = len(sentences)
+            
+        return colors_count
         
     
 

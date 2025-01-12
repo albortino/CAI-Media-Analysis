@@ -1,6 +1,7 @@
 # CAI-Media-Analysis
 This project assists in media analysis for the lecture "Communicating AI" at Johannes Kepler University.
 It uses OLLAMA local LLMs to analyze PDF files and assist in research.
+The final outputs are documents for every article and a combined research summary.
 
 # Author
 Mathias Schneider, 12.01.2025
@@ -19,7 +20,6 @@ Mathias Schneider, 12.01.2025
 - TF-IDF analysis for all documents to identify their uniqueness
 - LLM based answering of research question
 - Export in DOCX or Markdown
-
 
 # Installation of OLLAMA
 1) Download ollama from https://ollama.com

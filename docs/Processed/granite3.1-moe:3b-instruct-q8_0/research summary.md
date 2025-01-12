@@ -1,11 +1,13 @@
-# Latent Dirichlet Allocation interpretation (topics that are frequently mentioned in all articles) 
+# Latent Dirichlet Allocation interpretation
+### Topics that are frequently mentioned in all articles
 - AI-Driven Medical Threat Analysis & Reporting - Team Response Unveiled
 - Breaking Boundaries: Google & OpenAI-Fueled Text Analysis Revolution
 - Linguistic AI Tool: Large-Scale Predictability in Saudi Context, Trained on Word Examples.
 - Language Analysis in Job Training: Unveiling Khoury's Language Model Impact on Employee News Response
 - Microsoft's Pioneering Think-Powered Life-Enhancing Tool Boosts Realization and Efficiency
 
-# TF-IDF interpretation for every article (topics that appear in the article very often but not in others)
+# TF-IDF interpretation for every article
+### Topics that appear in the article very often but not in others
 - <ChatGPT AI grows more powerful as we become more predictable>: "AI-Powered Language Model Development: Ethical Implications for Government and Industry"
 - <ChatGPT is the Netscape moment' for artificial intelligence'>: "Leveraging Saudi Language Modeling: Challenges, Research, and Progress in Natural Language Development"
 - <ChatGPT outperforms copywriters in STEP Conference's outdoor adverts>: "AI Chatbot: Job Transformation & Global Knowledge Network Expansion"

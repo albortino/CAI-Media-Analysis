@@ -79,7 +79,9 @@ class FileAnalyzer:
     
     def get_tokens(self, text) -> str:
         """ Tokenize and remove stop words. """
-        doc = self.nlp(text)
+        cleaned_text = self.clean_input(text, hard_clean=True, line_breaks=True)
+        doc = self.nlp(cleaned_text)
+        
         tokens = [token.lemma_ for token in doc if not token.is_stop and not token.is_punct and not token.is_currency and not token.is_digit and token.is_alpha]
         tokens = [token.title() for token in tokens if token.isupper() or token.capitalize]
         return ' '.join(tokens)
@@ -93,11 +95,11 @@ class FileAnalyzer:
         
         # Generating short summary
         short_summary_response = self.ollama_handler.generate_short_summary(doc.content)
-        doc.short_summary = self.clean_input(short_summary_response)
+        doc.short_summary = self.clean_input(short_summary_response, hard_clean=False, line_breaks=False)
         
         # Generate long summary        
         summary_response = self.ollama_handler.generate_summary(doc.content)
-        doc.summary = self.clean_input(summary_response, soft_clean=True)
+        doc.summary = self.clean_input(summary_response, hard_clean=False, line_breaks=False)
         
         if self.debug:
             print(f"Types: summary={doc.summary}, short={doc.short_summary}")
@@ -107,7 +109,7 @@ class FileAnalyzer:
             print(f"{datetime.now().strftime("%H:%M:%S")}\t Finding answer to {len(self.questions)} question{"s" if len(self.questions) > 1 else ""}")
             for question in self.questions:
                 question_response = self.ollama_handler.answer_question(doc.content, question)
-                question_response = self.clean_input(question_response)
+                question_response = self.clean_input(question_response, hard_clean=False, line_breaks=False)
                 
                 doc.answers[question] = question_response.get("answer")
                         
@@ -121,7 +123,7 @@ class FileAnalyzer:
             if self.entitiy_collection in ["all", "spacy"]:
                 # Get entities with spacy
                 entities_response = self.extract_entities(doc.content_tokens)
-                doc.entities = self.clean_input(entities_response)
+                doc.entities = self.clean_input(entities_response, hard_clean=True, line_breaks=True)
                 
             # Get markings
             if self.get_markings:
@@ -152,7 +154,8 @@ class FileAnalyzer:
                 if len(sub_string) > len(title):
                     title = sub_string
             
-        title = self.clean_input(title)
+        # Removing linebreaks, tabs etc.
+        title = self.clean_input(title, hard_clean=False, line_breaks=True)
                 
         return title
     
@@ -164,7 +167,7 @@ class FileAnalyzer:
         """
         
         content = self.extract_text_from_docx(docx_path)
-        content = self.clean_input(content, line_breaks=False)
+        content = self.clean_input(content, hard_clean=True, line_breaks=True)
         
         # Remove the top boxes with author link etc.
         try:
@@ -179,7 +182,8 @@ class FileAnalyzer:
         # Extract author and remove it
         try: 
             # Set author
-            author = new_content[0].split("Author ")[1].strip()
+            author = new_content[0].split("Author ")[1]
+            author = self.clean_input(author)
             
             # Replace the surname of the author in the text with a placeholder
             content = content.replace(author.split(" ")[-1], "{author}")
@@ -211,7 +215,7 @@ class FileAnalyzer:
             PdfDocument: PDF-Document Handler with enriched informations.
         """        
         content = self.extract_text_from_pdf(pdf_path)
-        content = self.clean_input(content, line_breaks=False)
+        content = self.clean_input(content, hard_clean=False, line_breaks=False)
 
         title = self.extract_title(pdf_path)
         
@@ -273,13 +277,13 @@ class FileAnalyzer:
                 
         return all_documents
     
-    def clean_input(self, input, soft_clean: bool=False, line_breaks: bool=True) -> str:
+    def clean_input(self, input, hard_clean: bool=False, line_breaks: bool=False) -> str:
         """ Cleans the input. Applies to string, list and dictionaries.
 
         Args:
             input (str, list, dict): Input text
-            soft_clean (bool): Whether line breaks and special characters should be removed. Defaults to False.
-            line_breaks (bool): Whether line breaks should be considered. Defaults to True.
+            hard_clean (bool): Whether line breaks and special characters should be removed. Defaults to False.
+            line_breaks (bool): Whether line breaks should be considered. Defaults to False.
 
         Returns:
             str: Cleaned input files.
@@ -314,35 +318,27 @@ class FileAnalyzer:
             return ' '.join(cleaned_text.split())
             
         
-        words_to_remove = ["datum", "link", "dokument"]
-        
         if isinstance(input, str):
-            # Apply the cleaning steps for strings
             
-            # Replace ’ with '
-            input = input.replace("’", "'")
+            input = input.replace("’", "'") # Replace ’ with '
             
-            input = input.replace("\n\n", "\n")
+            input = re.sub(r"  +", " ", input) # Remove all double spaces
             
-            # Remove words
-            input = remove_entries(words_to_remove, input)
-            
-            # Remove line breaks if line_breaks is True and not soft_clean
-            if line_breaks and not soft_clean:
+            input = input.replace("\t"," ") # Remove tabs
+
+            # Remove line breaks if line_breaks is True and not hard_clean
+            if line_breaks:
                 input = input.replace("\n", " ")
             
-            # Remove non-ascii characters if not soft_clean
-            if not soft_clean:
-                input = input.encode("ascii", "ignore").decode()
-            
-            # Remove all special characters except "-" if not soft_clean
-            if not soft_clean:
-                input = remove_large_digits(input)
+            # Remove non-ascii characters if not hard_clean
+            if hard_clean:
+                words_to_remove = ["datum", "link", "dokument"]
+                input = remove_entries(words_to_remove, input) # Remove words
+
+                input = input.encode("ascii", "ignore").decode()  
                 input = re.sub(r"[^a-zA-Z0-9.,*' -]", " ", input)
-            
-            # Remove all double spaces
-            input = re.sub(r"  +", " ", input)
-            
+                input = remove_large_digits(input) # Remove large digits (usually years or bugs)
+                 
             # Remove leading and trailing whitespaces
             input = input.strip()
             
@@ -350,11 +346,11 @@ class FileAnalyzer:
         
         elif isinstance(input, list):
             # If input is a list, clean each element recursively
-            return [self.clean_input(item, soft_clean, line_breaks) for item in input]
+            return [self.clean_input(item, hard_clean, line_breaks) for item in input]
         
         elif isinstance(input, dict):
             # If input is a dictionary, clean each value recursively
-            return {key: self.clean_input(value, soft_clean, line_breaks) for key, value in input.items()}
+            return {key: self.clean_input(value, hard_clean, line_breaks) for key, value in input.items()}
         
         else:
             # Return the input unchanged if it is not a string, list, or dictionary

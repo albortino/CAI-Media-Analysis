@@ -43,6 +43,7 @@ class FileAnalyzer:
         self.debug = debug
         self.speed_debug = speed_debug
         self.analysis = dict()
+        self.average_sentiment = False
         
     def extract_text_from_pdf(self, pdf_path: str) -> str:
         """Iterates over all pages in the document and stores the text in instance. """
@@ -113,10 +114,23 @@ class FileAnalyzer:
                 
                 doc.answers[question] = question_response.get("answer")
                         
-            # Get sentiment           
-            sentiment_response = self.ollama_handler.analyze_sentiment(doc.content) 
-            doc.sentiment = sentiment_response.get("sentiment_value")
-            doc.sentiment_reason = sentiment_response.get("sentiment_reason")
+            # Get sentiment
+            if self.average_sentiment:
+                sentiment_values = list()
+                sentiment_reasons = list()
+                
+                for i in range(3):
+                    sentiment_result = self.ollama_handler.analyze_sentiment(doc.content_tokens) 
+                    sentiment_values.append(sentiment_result.get("sentiment_value"))
+                    sentiment_reasons.append(sentiment_result.get("sentiment_reason")
+                                             )
+                self.sentiment = round(sum(sentiment_values)/len(sentiment_values),2)
+                self.sentiment_reason = sentiment_reasons
+            
+            else:
+                sentiment_response = self.ollama_handler.analyze_sentiment(doc.content) 
+                doc.sentiment = sentiment_response.get("sentiment_value")
+                doc.sentiment_reason = sentiment_response.get("sentiment_reason")
             
             # Get entities
             print(f"{datetime.now().strftime("%H:%M:%S")}\t Extracting entities from text")

@@ -178,7 +178,12 @@ class DocumentHandler:
         # Sentiment
         docx.add_heading("Sentiment", level=2)
         docx.add_paragraph(f"The sentiment is <{self.sentiment}>")
-        docx.add_paragraph(f"{self.sentiment_reason}")
+        
+        ## Get sentiment reason or first reason if it is a list
+        if isinstance(self.sentiment_reason, list):
+            docx.add_paragraph(f"First reason for sentiment: {self.sentiment_reason[0]}")
+        else:
+            docx.add_paragraph(f"{self.sentiment_reason}")
 
         # Entities
         docx.add_heading("Entities", level=2)

@@ -23,18 +23,23 @@ Mathias Schneider, 12.01.2025
 
 # Installation of OLLAMA
 1) Download ollama from https://ollama.com
-2) Install the models. Not everything is needed, I suggest granite3.1-moe:3b-instruct-q8_0 (from IBM)
+2) Install the models. Feel free to take a model from the model list: https://ollama.com/search. I recommend the latest granite models (from IBM).
 Run in terminal:
-ollama run granite3.1-moe:3b-instruct-q8_0
+```bash
+ollama run granite3.3:latest
 #ollama run llama3.1
 #ollama run mistral
 #ollama run qwen:14b
 #ollama run phi4
+```
 
 # Environment
 To create the environment, run the following commands in your terminal:
-
+``` bash
 conda create -n nlp
 conda activate nlp
 conda install -c conda-forge pypdf ollama spacy numpy pandas ipykernel jupyter dill ollama-python pip matplotlib wordcloud python-docx scikit-learn
 pip install pymupdf
+```
+
+
